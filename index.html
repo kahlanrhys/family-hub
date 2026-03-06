@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Hub - Family Management App</title>
+    <script crossorigin src="https://unpkg.com/react@18.2.0/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.development.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+                sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        button { cursor: pointer; }
+        input { font-family: inherit; }
+        select { font-family: inherit; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script>
+        const { useState } = React;
+
+        function FamilyHub() {
+            const [activeTab, setActiveTab] = useState('calendar');
+            const [familyMembers] = useState(['Riza', 'RR', 'Rhys', 'Connor']);
+            
+            // Calendar state
+            const [calendarMonth, setCalendarMonth] = useState(new Date(2026, 2, 1));
+            const [events, setEvents] = useState([
+                { id: 1, title: 'School Assembly', date: '2026-03-05', members: ['Rhys', 'Connor'], time: '09:00' },
+                { id: 2, title: 'Doctor Appointment', date: '2026-03-08', members: ['Riza'], time: '14:00' },
+                { id: 3, title: 'Soccer Game', date: '2026-03-12', members: ['Connor'], time: '16:00' },
+            ]);
+            const [showEventModal, setShowEventModal] = useState(false);
+            const [eventForm, setEventForm] = useState({ title: '', date: '', time: '', members: [] });
+            
+            // Shopping state
+            const [shoppingList, setShoppingList] = useState([
+                { id: 1, item: 'Milk', category: 'Groceries', qty: 2, store: 'Tesco', checked: false },
+                { id: 2, item: 'Bread', category: 'Groceries', qty: 1, store: 'Sainsbury\'s', checked: false },
+                { id: 3, item: 'Eggs', category: 'Groceries', qty: 12, store: 'Tesco', checked: false },
+            ]);
+            const [showShoppingModal, setShowShoppingModal] = useState(false);
+            const [shoppingForm, setShoppingForm] = useState({ item: '', category: 'Groceries', qty: 1, store: 'Tesco' });
+            
+            // Chores state
+            const [chores, setChores] = useState([
+                { id: 1, task: 'Clean bedroom', assignee: 'Rhys', dueDate: '2026-03-06', completed: false },
+                { id: 2, task: 'Wash dishes', assignee: 'Connor', dueDate: '2026-03-07', completed: false },
+                { id: 3, task: 'Vacuum living room', assignee: 'RR', dueDate: '2026-03-08', completed: false },
+            ]);
+            const [showChoreModal, setShowChoreModal] = useState(false);
+            const [choreForm, setChoreForm] = useState({ task: '', assignee: 'Riza', dueDate: '' });
+            
+            // Meals state
+            const [meals, setMeals] = useState({
+                '2026-03-10': { breakfast: 'Cereal', lunch: 'Sandwich', dinner: 'Pasta' },
+                '2026-03-11': { breakfast: 'Eggs', lunch: 'Salad', dinner: 'Chicken' },
+            });
+            const [showMealModal, setShowMealModal] = useState(false);
+            const [editingMealDate, setEditingMealDate] = useState(null);
+            const [mealForm, setMealForm] = useState({ breakfast: '', lunch: '', dinner: '' });
+            
+            // Recipes state
+            const [recipes, setRecipes] = useState([
+                {
+                    id: 1,
+                    name: 'Chocolate Chip Cookies',
+                    image: '🍪',
+                    prepTime: '15 mins',
+                    cookTime: '12 mins',
+                    ingredients: [
+                        { item: 'Flour', qty: '2.25', unit: 'cups' },
+                        { item: 'Butter', qty: '1', unit: 'cup' },
+                    ],
+                    directions: ['Preheat oven to 375°F.', 'Mix ingredients.', 'Bake for 12 minutes.'],
+                    isFav: true,
+                },
+                {
+                    id: 2,
+                    name: 'Spaghetti Carbonara',
+                    image: '🍝',
+                    prepTime: '10 mins',
+                    cookTime: '15 mins',
+                    ingredients: [
+                        { item: 'Spaghetti', qty: '1', unit: 'lb' },
+                        { item: 'Eggs', qty: '4', unit: 'whole' },
+                    ],
+                    directions: ['Cook spaghetti.', 'Mix eggs and cheese.', 'Combine together.'],
+                    isFav: false,
+                },
+            ]);
+            const [recipePage, setRecipePage] = useState(0);
+            const [showRecipeModal, setShowRecipeModal] = useState(false);
+            const [recipeForm, setRecipeForm] = useState({ name: '', image: '', prepTime: '', cookTime: '', ingredients: [], directions: [] });
+            
+            // Pantry state
+            const [pantry, setPantry] = useState([
+                { id: 1, name: 'All-Purpose Flour', qty: 5, unit: 'lbs', location: 'Cabinet A', category: 'Baking' },
+                { id: 2, name: 'Tomato Sauce', qty: 3, unit: 'cans', location: 'Pantry', category: 'Canned' },
+                { id: 3, name: 'Cereal', qty: 2, unit: 'boxes', location: 'Pantry', category: 'Breakfast' },
+            ]);
+            const [showPantryModal, setShowPantryModal] = useState(false);
+            const [pantryForm, setPantryForm] = useState({ name: '', qty: 1, unit: 'count', location: '', category: 'Baking' });
+            const [consumeItem, setConsumeItem] = useState(null);
+            const [consumeQty, setConsumeQty] = useState('');
+            
+            // Games state
+            const [games, setGames] = useState([
+                { id: 1, title: 'Elden Ring', console: 'PlayStation 5', type: 'physical', location: 'Game Shelf' },
+                { id: 2, title: 'Zelda TOTK', console: 'Nintendo Switch', type: 'physical', location: 'Game Shelf' },
+                { id: 3, title: 'Halo Infinite', console: 'Xbox Series X', type: 'digital', account: 'Family' },
+                { id: 4, title: 'Super Mario Bros Wonder', console: 'Nintendo Switch', type: 'digital', account: 'Connor' },
+            ]);
+            const [gameFilter, setGameFilter] = useState(null);
+            const [showGameModal, setShowGameModal] = useState(false);
+            const [gameForm, setGameForm] = useState({ title: '', console: 'PlayStation 5', type: 'physical', location: '', account: '' });
+            const [consoles] = useState(['PlayStation 5', 'Xbox Series X', 'Nintendo Switch', 'PC']);
+            
+            // Vacations state
+            const [vacations, setVacations] = useState([
+                {
+                    id: 1,
+                    name: 'Spring Break - Caribbean',
+                    dest: 'Cancun',
+                    startDate: '2026-03-15',
+                    endDate: '2026-03-22',
+                    status: 'confirmed',
+                    flights: 'American Airlines',
+                    accommodation: 'Moon Palace Resort',
+                },
+            ]);
+            
+            // Helper functions
+            const getDaysInMonth = (date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+            const getFirstDayOfMonth = (date) => new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+            
+            // Calendar Tab
+            const CalendarTab = () => {
+                const daysInMonth = getDaysInMonth(calendarMonth);
+                const firstDay = getFirstDayOfMonth(calendarMonth);
+                const calendarDays = [];
+                
+                for (let i = 0; i < firstDay; i++) calendarDays.push(null);
+                for (let i = 1; i <= daysInMonth; i++) calendarDays.push(i);
+                
+                return React.createElement('div', { className: 'space-y-6' },
+                    React.createElement('div', { className: 'flex justify-between items-center' },
+                        React.createElement('h2', { className: 'text-3xl font-bold text-purple-800' }, 'Calendar'),
+                        React.createElement('div', { className: 'flex gap-2' },
+                            React.createElement('button', { onClick: () => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1)), className: 'px-4 py-2 bg-pink-300 hover:bg-pink-400 rounded-lg' }, '◀'),
+                            React.createElement('span', { className: 'px-4 py-2 text-lg font-semibold' }, calendarMonth.toLocaleString('default', { month: 'long', year: 'numeric' })),
+                            React.createElement('button', { onClick: () => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1)), className: 'px-4 py-2 bg-pink-300 hover:bg-pink-400 rounded-lg' }, '▶')
+                        )
+                    ),
+                    React.createElement('button', { onClick: () => setShowEventModal(true), className: 'px-6 py-2 bg-pink-500 hover:bg-pink-600 text-white font-semibold rounded-lg' }, '+ Add Event'),
+                    React.createElement('div', { className: 'grid grid-cols-7 gap-2' },
+                        ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => React.createElement('div', { key: day, className: 'text-center font-bold text-purple-700 py-2' }, day)),
+                        calendarDays.map((day, i) => React.createElement('div', {
+                            key: i,
+                            className: `min-h-20 border rounded-lg p-2 ${day ? 'bg-blue-50 cursor-pointer hover:bg-blue-100' : 'bg-gray-50'}`
+                        },
+                            day && React.createElement('p', { className: 'font-bold' }, day)
+                        ))
+                    )
+                );
+            };
+            
+            // Shopping Tab
+            const ShoppingTab = () => {
+                return React.createElement('div', { className: 'space-y-6' },
+                    React.createElement('div', { className: 'flex justify-between items-center' },
+                        React.createElement('h2', { className: 'text-3xl font-bold text-purple-800' }, 'Shopping'),
+                        React.createElement('button', { onClick: () => setShowShoppingModal(true), className: 'px-6 py-2 bg-pink-500 hover:bg-pink-600 text-white font-semibold rounded-lg' }, '+ Add Item')
+                    ),
+                    React.createElement('div', { className: 'space-y-3' },
+                        shoppingList.map(item => React.createElement('div', {
+                            key: item.id,
+                            className: `bg-white p-4 rounded-lg border-2 ${item.checked ? 'border-green-300 bg-green-50' : 'border-purple-200'}`
+                        },
+                            React.createElement('div', { className: 'flex items-center gap-3' },
+                                React.createElement('input', {
+                                    type: 'checkbox',
+                                    checked: item.checked,
+                                    onChange: () => setShoppingList(shoppingList.map(i => i.id === item.id ? { ...i, checked: !i.checked } : i)),
+                                    className: 'w-5 h-5'
+                                }),
+                                React.createElement('div', { className: 'flex-1' },
+                                    React.createElement('p', { className: `font-semibold ${item.checked ? 'line-through text-gray-400' : 'text-gray-800'}` }, item.item),
+                                    React.createElement('p', { className: 'text-sm text-gray-600' }, `${item.category} • ${item.store}`)
+                                ),
+                                React.createElement('span', { className: 'bg-pink-200 px-3 py-1 rounded-full font-semibold' }, item.qty)
+                            )
+                        ))
+                    )
+                );
+            };
+            
+            // Chores Tab
+            const ChoresTab = () => {
+                return React.createElement('div', { className: 'space-y-6' },
+                    React.createElement('div', { className: 'flex justify-between items-center' },
+                        React.createElement('h2', { className: 'text-3xl font-bold text-purple-800' }, 'Chores'),
+                        React.createElement('button', { onClick: () => setShowChoreModal(true), className: 'px-6 py-2 bg-pink-500 hover:bg-pink-600 text-white font-semibold rounded-lg' }, '+ Add Chore')
+                    ),
+                    React.createElement('div', { className: 'space-y-3' },
+                        chores.map(chore => React.createElement('div', {
+                            key: chore.id,
+                            className: `bg-white p-4 rounded-lg border-2 ${chore.completed ? 'border-green-300 bg-green-50' : 'border-purple-200'}`
+                        },
+                            React.createElement('div', { className: 'flex items-center gap-3' },
+                                React.createElement('input', {
+                                    type: 'checkbox',
+                                    checked: chore.completed,
+                                    onChange: () => setChores(chores.map(c => c.id === chore.id ? { ...c, completed: !c.completed } : c)),
+                                    className: 'w-5 h-5'
+                                }),
+                                React.createElement('div', { className: 'flex-1' },
+                                    React.createElement('p', { className: `font-semibold ${chore.completed ? 'line-through text-gray-400' : 'text-gray-800'}` }, chore.task),
+                                    React.createElement('p', { className: 'text-sm text-gray-600' }, `${chore.assignee} • ${chore.dueDate}`)
+                                )
+                            )
+                        ))
+                    )
+                );
+            };
+            
+            // Meals Tab
+            const MealsTab = () => {
+                return React.createElement('div', { className: 'space-y-6' },
+                    React.createElement('h2', { className: 'text-3xl font-bold text-purple-800' }, 'Meals'),
+                    React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-4' },
+                        ['Breakfast', 'Lunch', 'Dinner'].map(meal => React.createElement('div', {
+                            key: meal,
+                            className: 'bg-white p-6 rounded-lg border-2 border-purple-200'
+                        },
+                            React.createElement('h3', { className: 'text-xl font-bold text-purple-800 mb-4' }, meal),
+                            React.createElement('button', { onClick: () => setShowMealModal(true), className: 'w-full px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg' }, 'Plan')
+                        ))
+                    )
+                );
+            };
+            
+            // Recipes Tab
+            const RecipesTab = () => {
+                const sorted = [...recipes].sort((a, b) => b.isFav - a.isFav);
+                const current = sorted[recipePage];
+                
+                if (!current) return React.createElement('div', {}, 'No recipes');
+                
+                return React.createElement('div', { className: 'space-y-6' },
+                    React.createElement('div', { className: 'flex justify-between items-center' },
+                        React.createElement('h2', { className: 'text-3xl font-bold text-purple-800' }, 'Recipes'),
+                        React.createElement('button', { onClick: () => setShowRecipeModal(true), className: 'px-6 py-2 bg-pink-500 hover:bg-pink-600 text-white font-semibold rounded-lg' }, '+ Recipe')
+                    ),
+                    React.createElement('div', { className: 'bg-white rounded-lg border-2 border-purple-200 p-8' },
+                        React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-6 mb-6' },
+                            React.createElement('div', { className: 'text-6xl text-center' }, current.image),
+                            React.createElement('div', { className: 'md:col-span-2' },
+                                React.createElement('h3', { className: 'text-3xl font-bold text-purple-800 mb-4' }, current.name),
+                                React.createElement('p', { className: 'text-gray-700 mb-2' }, `⏱️ Prep: ${current.prepTime} | 🔥 Cook: ${current.cookTime}`)
+                            )
+                        ),
+                        React.createElement('h4', { className: 'text-xl font-bold text-purple-800 mb-3' }, 'Ingredients:'),
+                        React.createElement('ul', { className: 'mb-6 space-y-2' },
+                            current.ingredients.map((ing, i) => React.createElement('li', { key: i }, `• ${ing.item}: ${ing.qty} ${ing.unit}`))
+                        ),
+                        React.createElement('h4', { className: 'text-xl font-bold text-purple-800 mb-3' }, 'Directions:'),
+                        React.createElement('ol', { className: 'space-y-2' },
+                            current.directions.map((dir, i) => React.createElement('li', { key: i }, `${i + 1}. ${dir}`))
+                        )
+                    ),
+                    React.createElement('div', { className: 'flex justify-center gap-4' },
+                        React.createElement('button', { onClick: () => setRecipePage(Math.max(0, recipePage - 1)), className: 'px-4 py-2 bg-pink-300 hover:bg-pink-400 rounded-lg' }, '◀'),
+                        React.createElement('span', { className: 'px-4 py-2' }, `${recipePage + 1} / ${sorted.length}`),
+                        React.createElement('button', { onClick: () => setRecipePage(Math.min(sorted.length - 1, recipePage + 1)), className: 'px-4 py-2 bg-pink-300 hover:bg-pink-400 rounded-lg' }, '▶')
+                    )
+                );
+            };
+            
+            // Pantry Tab
+            const PantryTab = () => {
+                return React.createElement('div', { className: 'space-y-6' },
+                    React.createElement('div', { className: 'flex justify-between items-center' },
+                        React.createElement('h2', { className: 'text-3xl font-bold text-purple-800' }, 'Pantry'),
+                        React.createElement('button', { onClick: () => setShowPantryModal(true), className: 'px-6 py-2 bg-pink-500 hover:bg-pink-600 text-white font-semibold rounded-lg' }, '+ Add Item')
+                    ),
+                    React.createElement('div', { className: 'space-y-3' },
+                        pantry.map(item => React.createElement('div', {
+                            key: item.id,
+                            className: 'bg-white p-4 rounded-lg border-2 border-purple-200'
+                        },
+                            React.createElement('div', { className: 'flex justify-between items-start mb-3' },
+                                React.createElement('div', {},
+                                    React.createElement('p', { className: 'font-semibold text-gray-800' }, item.name),
+                                    React.createElement('p', { className: 'text-sm text-gray-600' }, `📍 ${item.location}`)
+                                ),
+                                React.createElement('span', { className: 'bg-pink-200 px-3 py-1 rounded-full font-semibold' }, `${item.qty} ${item.unit}`)
+                            ),
+                            React.createElement('button', {
+                                onClick: () => setConsumeItem(item.id),
+                                className: 'px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg w-full'
+                            }, '✓ Consume')
+                        ))
+                    )
+                );
+            };
+            
+            // Games Tab
+            const GamesTab = () => {
+                const filtered = gameFilter ? games.filter(g => g.console === gameFilter) : games;
+                const byConsole = {};
+                filtered.forEach(g => {
+                    if (!byConsole[g.console]) byConsole[g.console] = [];
+                    byConsole[g.console].push(g);
+                });
+                
+                return React.createElement('div', { className: 'space-y-6' },
+                    React.createElement('div', { className: 'flex justify-between items-center' },
+                        React.createElement('h2', { className: 'text-3xl font-bold text-purple-800' }, 'Games'),
+                        React.createElement('button', { onClick: () => setShowGameModal(true), className: 'px-6 py-2 bg-pink-500 hover:bg-pink-600 text-white font-semibold rounded-lg' }, '+ Add Game')
+                    ),
+                    React.createElement('div', { className: 'flex flex-wrap gap-2' },
+                        React.createElement('button', {
+                            onClick: () => setGameFilter(null),
+                            className: `px-4 py-2 rounded-full ${gameFilter === null ? 'bg-purple-500 text-white' : 'bg-blue-200'}`
+                        }, 'All'),
+                        consoles.map(c => React.createElement('button', {
+                            key: c,
+                            onClick: () => setGameFilter(gameFilter === c ? null : c),
+                            className: `px-4 py-2 rounded-full ${gameFilter === c ? 'bg-purple-500 text-white' : 'bg-blue-200'}`
+                        }, c))
+                    ),
+                    React.createElement('div', { className: 'space-y-4' },
+                        Object.entries(byConsole).map(([console, consoleGames]) => React.createElement('div', {
+                            key: console
+                        },
+                            React.createElement('h3', { className: 'text-xl font-bold text-purple-800 mb-2' }, `🎮 ${console}`),
+                            React.createElement('div', { className: 'space-y-2' },
+                                consoleGames.map(game => React.createElement('div', {
+                                    key: game.id,
+                                    className: 'bg-white p-4 rounded-lg border-2 border-purple-200'
+                                },
+                                    React.createElement('p', { className: 'font-semibold' }, game.title),
+                                    React.createElement('p', { className: 'text-sm text-gray-600' },
+                                        game.type === 'digital' ? `💾 Digital • ${game.account}` : `💿 Physical • ${game.location}`
+                                    )
+                                ))
+                            )
+                        ))
+                    )
+                );
+            };
+            
+            // Vacations Tab
+            const VacationsTab = () => {
+                return React.createElement('div', { className: 'space-y-6' },
+                    React.createElement('h2', { className: 'text-3xl font-bold text-purple-800' }, 'Vacations'),
+                    React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-4' },
+                        vacations.map(v => React.createElement('div', {
+                            key: v.id,
+                            className: 'bg-white p-6 rounded-lg border-2 border-purple-200'
+                        },
+                            React.createElement('h3', { className: 'text-xl font-bold text-purple-800 mb-2' }, v.name),
+                            React.createElement('p', { className: 'text-gray-700 mb-2' }, `📍 ${v.dest}`),
+                            React.createElement('p', { className: 'text-sm text-gray-600' }, `${v.startDate} to ${v.endDate}`),
+                            React.createElement('p', { className: 'text-sm mt-2' }, `Status: ${v.status}`)
+                        ))
+                    )
+                );
+            };
+            
+            // Search Tab
+            const SearchTab = () => {
+                return React.createElement('div', { className: 'space-y-6' },
+                    React.createElement('h2', { className: 'text-3xl font-bold text-purple-800' }, 'Travel Planning'),
+                    React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-4' },
+                        [
+                            { icon: '✈️', name: 'Flights', desc: 'Book your flights' },
+                            { icon: '🏨', name: 'Hotels', desc: 'Find accommodations' },
+                            { icon: '🍽️', name: 'Restaurants', desc: 'Discover dining' },
+                            { icon: '🗺️', name: 'Attractions', desc: 'Plan activities' },
+                        ].map(item => React.createElement('div', {
+                            key: item.name,
+                            className: 'bg-white p-6 rounded-lg border-2 border-purple-200 text-center'
+                        },
+                            React.createElement('p', { className: 'text-5xl mb-2' }, item.icon),
+                            React.createElement('p', { className: 'font-bold text-lg' }, item.name),
+                            React.createElement('p', { className: 'text-gray-600 text-sm' }, item.desc)
+                        ))
+                    )
+                );
+            };
+            
+            return React.createElement('div', { style: { fontFamily: '"Century Gothic", "Trebuchet MS", sans-serif' }, className: 'min-h-screen bg-gradient-to-br from-blue-100 via-purple-50 to-pink-100' },
+                React.createElement('div', { className: 'bg-gradient-to-r from-purple-400 via-pink-300 to-blue-300 shadow-lg p-8' },
+                    React.createElement('h1', { className: 'text-4xl font-bold text-purple-900' }, '👨‍👩‍👧‍👦 Family Hub'),
+                    React.createElement('p', { className: 'text-purple-700 mt-2' }, 'Manage everything for Riza, RR, Rhys & Connor')
+                ),
+                React.createElement('div', { className: 'bg-white border-b-4 border-pink-300 sticky top-0 z-10 shadow' },
+                    React.createElement('div', { className: 'flex gap-2 overflow-x-auto p-4 max-w-7xl mx-auto' },
+                        [
+                            { id: 'calendar', icon: '📅', label: 'Calendar' },
+                            { id: 'shopping', icon: '🛒', label: 'Shopping' },
+                            { id: 'chores', icon: '✓', label: 'Chores' },
+                            { id: 'meals', icon: '🍽️', label: 'Meals' },
+                            { id: 'recipes', icon: '📖', label: 'Recipes' },
+                            { id: 'pantry', icon: '🥫', label: 'Pantry' },
+                            { id: 'games', icon: '🎮', label: 'Games' },
+                            { id: 'vacations', icon: '✈️', label: 'Vacations' },
+                            { id: 'search', icon: '🔍', label: 'Search' },
+                        ].map(tab => React.createElement('button', {
+                            key: tab.id,
+                            onClick: () => setActiveTab(tab.id),
+                            className: `px-4 py-2 font-semibold whitespace-nowrap rounded-t-lg transition ${activeTab === tab.id ? 'bg-purple-500 text-white' : 'text-gray-600 hover:text-purple-700'}`
+                        }, `${tab.icon} ${tab.label}`))
+                    )
+                ),
+                React.createElement('div', { className: 'max-w-7xl mx-auto p-8' },
+                    activeTab === 'calendar' && React.createElement(CalendarTab),
+                    activeTab === 'shopping' && React.createElement(ShoppingTab),
+                    activeTab === 'chores' && React.createElement(ChoresTab),
+                    activeTab === 'meals' && React.createElement(MealsTab),
+                    activeTab === 'recipes' && React.createElement(RecipesTab),
+                    activeTab === 'pantry' && React.createElement(PantryTab),
+                    activeTab === 'games' && React.createElement(GamesTab),
+                    activeTab === 'vacations' && React.createElement(VacationsTab),
+                    activeTab === 'search' && React.createElement(SearchTab)
+                )
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(React.createElement(FamilyHub));
+    </script>
+</body>
+</html>

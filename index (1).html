@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Hub</title>
+    <script crossorigin src="https://unpkg.com/react@18.2.0/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.development.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="root"></div>
+    <script>
+const { useState } = React;
+
+function App() {
+    const [activeTab, setActiveTab] = useState('calendar');
+    const families = ['Riza', 'RR', 'Rhys', 'Connor'];
+
+    // ===== CALENDAR =====
+    const [calMonth, setCalMonth] = useState(new Date(2026, 2, 1));
+    const [events, setEvents] = useState([
+        { id: 1, title: 'School Assembly', date: '2026-03-05', start: '09:00', end: '10:30', venue: 'School Hall', members: ['Rhys', 'Connor'], details: 'Annual assembly. Bring uniform.' },
+        { id: 2, title: 'Doctor Appointment', date: '2026-03-08', start: '14:00', end: '14:45', venue: 'City Medical', members: ['Riza'], details: 'Checkup. Bring insurance card.' },
+        { id: 3, title: 'Soccer Game', date: '2026-03-12', start: '16:00', end: '17:30', venue: 'Sports Park', members: ['Connor'], details: "Connor's match. Bring water & snacks." },
+        { id: 4, title: 'Family Dinner', date: '2026-03-14', start: '18:00', end: '20:00', venue: 'Home', members: ['Riza', 'RR', 'Rhys', 'Connor'], details: 'Italian pasta dinner.' },
+    ]);
+    const [eventModal, setEventModal] = useState(false);
+    const [editEvent, setEditEvent] = useState(null);
+    const [eventForm, setEventForm] = useState({ title: '', date: '', start: '', end: '', venue: '', members: [], details: '' });
+    const [calFilterMembers, setCalFilterMembers] = useState([]);
+    const [calFilterFamilyOnly, setCalFilterFamilyOnly] = useState(false);
+
+    // ===== SHOPPING =====
+    const [shopping, setShopping] = useState([
+        { id: 1, item: 'Milk', category: 'Groceries', qty: 2, store: 'Tesco', checked: false },
+        { id: 2, item: 'Bread', category: 'Groceries', qty: 1, store: "Sainsbury's", checked: false },
+        { id: 3, item: 'Eggs', category: 'Groceries', qty: 12, store: 'Tesco', checked: false },
+        { id: 4, item: 'Shampoo', category: 'Health & Beauty', qty: 1, store: 'Boots', checked: false },
+        { id: 5, item: 'Notebook', category: 'School Essentials', qty: 3, store: 'WHSmith', checked: false },
+    ]);
+    const [shopCategory, setShopCategory] = useState(null);
+    const [shopStore, setShopStore] = useState(null);
+    const shopCategories = ['Groceries', 'School Essentials', 'Health & Beauty', 'Technology'];
+    const shopStores = ['Tesco', "Sainsbury's", 'Asda', 'Boots', 'WHSmith'];
+
+    // ===== CHORES =====
+    const [chores, setChores] = useState([
+        { id: 1, task: 'Clean bedroom', who: 'Rhys', date: '2026-03-06', done: false },
+        { id: 2, task: 'Wash dishes', who: 'Connor', date: '2026-03-07', done: false },
+        { id: 3, task: 'Vacuum room', who: 'RR', date: '2026-03-08', done: false },
+        { id: 4, task: 'Do laundry', who: 'Riza', date: '2026-03-09', done: false },
+    ]);
+    const [choreView, setChoreView] = useState('list');
+    const [choreFilter, setChoreFilter] = useState(null);
+    const [choresWeekStart, setChoresWeekStart] = useState(new Date());
+
+    // ===== MEALS =====
+    const [meals, setMeals] = useState({
+        '2026-03-10': { breakfast: 'Cereal', lunch: 'Sandwich', dinner: 'Pasta' },
+        '2026-03-11': { breakfast: 'Eggs', lunch: 'Salad', dinner: 'Chicken' },
+        '2026-03-12': { breakfast: 'Pancakes', lunch: 'Tacos', dinner: 'Pizza' },
+    });
+    const [mealModal, setMealModal] = useState(false);
+    const [editingMealDate, setEditingMealDate] = useState(null);
+    const [mealForm, setMealForm] = useState({ breakfast: '', lunch: '', dinner: '' });
+
+    // ===== RECIPES =====
+    const [recipes, setRecipes] = useState([
+        { id: 1, name: 'Chocolate Chip Cookies', image: '🍪', prepTime: '15 mins', cookTime: '12 mins', ingredients: ['Flour 2.25 cups', 'Butter 1 cup', 'Sugar 0.75 cup'], directions: ['Preheat', 'Cream butter and sugar', 'Mix in flour', 'Bake 12 mins'], isFav: true },
+        { id: 2, name: 'Spaghetti Carbonara', image: '🍝', prepTime: '10 mins', cookTime: '15 mins', ingredients: ['Spaghetti 1 lb', 'Pancetta 6 oz', 'Eggs 4', 'Parmesan 1 cup'], directions: ['Cook spaghetti', 'Fry pancetta', 'Mix eggs & cheese', 'Combine'], isFav: false },
+    ]);
+    const [recipePage, setRecipePage] = useState(0);
+
+    // ===== PANTRY =====
+    const [pantry, setPantry] = useState([
+        { id: 1, name: 'All-Purpose Flour', qty: 5, unit: 'lbs', location: 'Cabinet A', category: 'Baking' },
+        { id: 2, name: 'Tomato Sauce', qty: 3, unit: 'cans', location: 'Pantry', category: 'Canned' },
+        { id: 3, name: 'Cereal', qty: 2, unit: 'boxes', location: 'Pantry', category: 'Breakfast' },
+        { id: 4, name: 'Pasta', qty: 4, unit: 'boxes', location: 'Cabinet B', category: 'Grains' },
+    ]);
+    const [pantrySearch, setPantrySearch] = useState('');
+    const [pantryCategory, setPantryCategory] = useState(null);
+    const pantryCategories = ['Baking', 'Canned', 'Breakfast', 'Grains', 'Condiments'];
+    const [showPantryModal, setShowPantryModal] = useState(false);
+    const [editingPantry, setEditingPantry] = useState(null);
+    const [pantryForm, setPantryForm] = useState({ name: '', qty: 1, unit: 'count', location: '', category: 'Baking' });
+    const [consumeItem, setConsumeItem] = useState(null);
+    const [consumeQty, setConsumeQty] = useState('');
+
+    // ===== GAMES =====
+    const [games, setGames] = useState([
+        { id: 1, title: 'Elden Ring', console: 'PlayStation 5', type: 'physical', location: 'Game Shelf', account: null },
+        { id: 2, title: 'Zelda TOTK', console: 'Nintendo Switch', type: 'physical', location: 'Game Shelf', account: null },
+        { id: 3, title: 'Halo Infinite', console: 'Xbox Series X', type: 'digital', location: null, account: 'Family' },
+        { id: 4, title: 'Super Mario Bros', console: 'Nintendo Switch', type: 'digital', location: null, account: 'Connor' },
+        { id: 5, title: 'God of War', console: 'PlayStation 5', type: 'physical', location: 'Game Shelf', account: null },
+    ]);
+    const [gameConsole, setGameConsole] = useState(null);
+    const [showGameModal, setShowGameModal] = useState(false);
+    const [editingGame, setEditingGame] = useState(null);
+    const [gameForm, setGameForm] = useState({ title: '', console: 'PlayStation 5', type: 'physical', location: '', account: '' });
+    const consoles = ['PlayStation 5', 'Xbox Series X', 'Nintendo Switch', 'PC'];
+
+    // ===== VACATIONS =====
+    const [vacations, setVacations] = useState([
+        { id: 1, name: 'Spring Break - Caribbean', dest: 'Cancun', startDate: '2026-03-15', endDate: '2026-03-22', status: 'confirmed', flights: 'American Airlines', accommodation: 'Moon Palace Resort', depAirport: 'London Heathrow', depDate: '2026-03-15', depTime: '08:30', retAirport: 'London Heathrow', retDate: '2026-03-22', retTime: '15:45', itinerary: [{day: 1, activity: 'Arrive and check-in'}, {day: 2, activity: 'Beach day'}, {day: 3, activity: 'Snorkeling'}] },
+        { id: 2, name: 'Easter - Portugal', dest: 'Lisbon', startDate: '2026-04-05', endDate: '2026-04-12', status: 'planning', flights: 'TAP Air', accommodation: 'Memmo Alfama', depAirport: 'London Stansted', depDate: '2026-04-05', depTime: '10:15', retAirport: 'London Stansted', retDate: '2026-04-12', retTime: '17:20', itinerary: [{day: 1, activity: 'Arrive, explore city'}, {day: 2, activity: 'Visit monuments'}] },
+    ]);
+    const [selectedVac, setSelectedVac] = useState(null);
+
+    // EVENT HANDLERS
+    const openEvent = (dateStr, evt = null) => {
+        if (evt) {
+            setEventForm({ ...evt });
+            setEditEvent(evt.id);
+        } else {
+            setEventForm({ title: '', date: dateStr, start: '', end: '', venue: '', members: [], details: '' });
+            setEditEvent(null);
+        }
+        setEventModal(true);
+    };
+
+    const saveEvent = () => {
+        if (!eventForm.title.trim()) { alert('Enter event title'); return; }
+        if (editEvent) {
+            setEvents(events.map(e => e.id === editEvent ? { ...e, ...eventForm } : e));
+        } else {
+            setEvents([...events, { id: Math.max(...events.map(e => e.id), 0) + 1, ...eventForm }]);
+        }
+        setEventModal(false);
+    };
+
+    const deleteEvent = () => {
+        if (window.confirm('Delete event?')) {
+            setEvents(events.filter(e => e.id !== editEvent));
+            setEventModal(false);
+        }
+    };
+
+    // CALENDAR RENDERING
+    const renderCalendar = () => {
+        const daysInMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() + 1, 0).getDate();
+        const firstDay = new Date(calMonth.getFullYear(), calMonth.getMonth(), 1).getDay();
+        const days = [];
+        
+        for (let i = 0; i < firstDay; i++) days.push(null);
+        for (let i = 1; i <= daysInMonth; i++) days.push(i);
+        
+        return days.map((day, i) => {
+            if (!day) return React.createElement('div', { key: i, className: 'bg-gray-50' });
+            
+            const dateStr = `2026-03-${String(day).padStart(2, '0')}`;
+            let dayEvents = events.filter(e => e.date === dateStr);
+            
+            if (calFilterMembers.length > 0) {
+                dayEvents = dayEvents.filter(e => e.members.some(m => calFilterMembers.includes(m)));
+            }
+            if (calFilterFamilyOnly) {
+                dayEvents = dayEvents.filter(e => e.members.length === 4);
+            }
+            
+            return React.createElement('div', {
+                key: i,
+                onClick: () => openEvent(dateStr),
+                className: 'min-h-24 rounded-lg p-2 border bg-gradient-to-br from-blue-50 to-purple-50 border-purple-100 hover:shadow-md cursor-pointer'
+            },
+                React.createElement('p', { className: 'font-bold text-gray-800 text-sm' }, day),
+                dayEvents.slice(0, 2).map(ev => React.createElement('p', {
+                    key: ev.id,
+                    onClick: (e) => { e.stopPropagation(); openEvent(null, ev); },
+                    className: 'text-xs bg-pink-200 text-purple-800 rounded px-1 mt-1 truncate hover:bg-pink-300 cursor-pointer'
+                }, ev.title)),
+                dayEvents.length > 2 && React.createElement('p', { className: 'text-xs text-purple-600' }, `+${dayEvents.length - 2}`)
+            );
+        });
+    };
+
+    const upcomingEvents = events
+        .filter(e => {
+            const ed = new Date(e.date);
+            const today = new Date();
+            const week = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+            return ed >= today && ed <= week;
+        })
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    // CHORES - GET WEEK
+    const getWeekStart = (date) => {
+        const d = new Date(date);
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+        return new Date(d.setDate(diff));
+    };
+
+    const weekStart = getWeekStart(choresWeekStart);
+    const weekDays = [];
+    for (let i = 0; i < 7; i++) {
+        const d = new Date(weekStart);
+        d.setDate(d.getDate() + i);
+        weekDays.push(d);
+    }
+
+    // CHORES - FILTERED
+    const filteredChores = choreFilter ? chores.filter(c => c.who === choreFilter) : chores;
+
+    // SHOPPING - FILTERED
+    const filteredShopping = shopping.filter(s => {
+        const matchCat = !shopCategory || s.category === shopCategory;
+        const matchStore = !shopStore || s.store === shopStore;
+        return matchCat && matchStore;
+    });
+
+    // GAMES - FILTERED
+    const filteredGames = games.filter(g => !gameConsole || g.console === gameConsole);
+
+    // PANTRY - FILTERED
+    const filteredPantry = pantry.filter(p => {
+        const matchSearch = p.name.toLowerCase().includes(pantrySearch.toLowerCase());
+        const matchCategory = !pantryCategory || p.category === pantryCategory;
+        return matchSearch && matchCategory;
+    });
+
+    return React.createElement('div', { className: 'min-h-screen bg-gradient-to-br from-blue-100 via-purple-50 to-pink-100' },
+        // HEADER
+        React.createElement('div', { className: 'bg-gradient-to-r from-purple-300 via-pink-200 to-blue-200 shadow-lg' },
+            React.createElement('div', { className: 'max-w-7xl mx-auto px-6 py-8' },
+                React.createElement('h1', { className: 'text-4xl font-bold text-purple-900' }, '👨‍👩‍👧‍👦 Family Hub'),
+                React.createElement('p', { className: 'text-purple-700 mt-1' }, 'Family Management App')
+            )
+        ),
+
+        // TABS
+        React.createElement('div', { className: 'bg-white border-b border-purple-100 shadow-sm sticky top-0 z-10' },
+            React.createElement('div', { className: 'max-w-7xl mx-auto px-6 flex gap-1 overflow-x-auto' },
+                [
+                    { id: 'calendar', label: 'Calendar', icon: '📅' },
+                    { id: 'shopping', label: 'Shopping', icon: '🛒' },
+                    { id: 'chores', label: 'Chores', icon: '✓' },
+                    { id: 'meals', label: 'Meals', icon: '🍽️' },
+                    { id: 'recipes', label: 'Recipes', icon: '📖' },
+                    { id: 'pantry', label: 'Pantry', icon: '🥫' },
+                    { id: 'games', label: 'Games', icon: '🎮' },
+                    { id: 'vacation', label: 'Vacations', icon: '✈️' },
+                ].map(tab => React.createElement('button', {
+                    key: tab.id,
+                    onClick: () => setActiveTab(tab.id),
+                    className: `px-6 py-4 font-semibold whitespace-nowrap transition ${activeTab === tab.id ? 'border-b-4 border-pink-400 text-purple-800 bg-gradient-to-b from-pink-50 to-transparent' : 'text-gray-600 hover:text-purple-700'}`
+                }, tab.icon + ' ' + tab.label))
+            )
+        ),
+
+        // CONTENT
+        React.createElement('div', { className: 'max-w-7xl mx-auto px-6 py-8' },
+            // CALENDAR
+            activeTab === 'calendar' && React.createElement('div', { className: 'space-y-6' },
+                React.createElement('div', { className: 'flex justify-between items-center' },
+                    React.createElement('h2', { className: 'text-2xl font-bold text-purple-800' }, 'Calendar'),
+                    React.createElement('div', { className: 'flex gap-2' },
+                        React.createElement('button', { onClick: () => setCalMonth(new Date(calMonth.getFullYear(), calMonth.getMonth() - 1)), className: 'p-2 bg-pink-200 hover:bg-pink-300 rounded' }, '◀'),
+                        React.createElement('span', { className: 'px-4 py-2 font-semibold text-purple-700' }, calMonth.toLocaleString('default', { month: 'long', year: 'numeric' })),
+                        React.createElement('button', { onClick: () => setCalMonth(new Date(calMonth.getFullYear(), calMonth.getMonth() + 1)), className: 'p-2 bg-pink-200 hover:bg-pink-300 rounded' }, '▶')
+                    )
+                ),
+                React.createElement('div', { className: 'flex gap-2 flex-wrap' },
+                    React.createElement('button', { onClick: () => setCalFilterMembers([]), className: `px-4 py-2 rounded-full font-medium ${calFilterMembers.length === 0 ? 'bg-purple-500 text-white' : 'bg-blue-100'}` }, 'All'),
+                    families.map(f => React.createElement('button', { key: f, onClick: () => setCalFilterMembers(calFilterMembers.includes(f) ? calFilterMembers.filter(x => x !== f) : [...calFilterMembers, f]), className: `px-4 py-2 rounded-full font-medium ${calFilterMembers.includes(f) ? 'bg-purple-500 text-white' : 'bg-blue-100'}` }, f)),
+                    React.createElement('button', { onClick: () => setCalFilterFamilyOnly(!calFilterFamilyOnly), className: `px-4 py-2 rounded-full font-medium ${calFilterFamilyOnly ? 'bg-purple-500 text-white' : 'bg-blue-100'}` }, 'Family Only')
+                ),
+                React.createElement('div', { className: 'grid grid-cols-7 gap-2' },
+                    ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => React.createElement('div', { key: d, className: 'text-center font-semibold text-purple-600 py-2' }, d)),
+                    renderCalendar()
+                ),
+                React.createElement('div', { className: 'bg-white rounded-2xl shadow-lg border border-pink-100 p-6 mt-8' },
+                    React.createElement('h3', { className: 'text-xl font-bold text-purple-800 mb-4' }, '📅 Upcoming Events (Next 7 Days)'),
+                    upcomingEvents.length > 0 ? upcomingEvents.map(ev => React.createElement('div', {
+                        key: ev.id,
+                        onClick: () => openEvent(null, ev),
+                        className: 'mb-3 p-4 rounded-lg border-l-4 border-pink-400 bg-gradient-to-r from-pink-50 to-white hover:shadow-md cursor-pointer'
+                    },
+                        React.createElement('div', { className: 'flex justify-between items-start mb-2' },
+                            React.createElement('div', {},
+                                React.createElement('h4', { className: 'font-bold text-purple-800' }, ev.title),
+                                React.createElement('p', { className: 'text-sm text-gray-600 mt-1' }, `📅 ${new Date(ev.date).toLocaleDateString()}`)
+                            ),
+                            React.createElement('span', { className: 'bg-purple-500 text-white px-3 py-1 rounded-full text-xs font-semibold' }, `${ev.start} - ${ev.end}`)
+                        ),
+                        React.createElement('div', { className: 'grid grid-cols-2 gap-3 mt-3 text-sm' },
+                            React.createElement('div', { className: 'flex items-center text-gray-700' }, React.createElement('span', { className: 'mr-2' }, '📍'), ev.venue),
+                            React.createElement('div', { className: 'flex items-center text-gray-700' }, React.createElement('span', { className: 'mr-2' }, '👥'), `${ev.members.length} attending`)
+                        ),
+                        ev.details && React.createElement('div', { className: 'mt-3 pt-3 border-t border-pink-200' },
+                            React.createElement('p', { className: 'text-sm text-gray-700 italic' }, `💡 ${ev.details}`)
+                        )
+                    )) : React.createElement('div', { className: 'text-center py-8 text-gray-500' }, 'No upcoming events')
+                )
+            ),
+
+            // SHOPPING
+            activeTab === 'shopping' && React.createElement('div', { className: 'space-y-6' },
+                React.createElement('h2', { className: 'text-2xl font-bold text-purple-800' }, 'Shopping List'),
+                React.createElement('div', { className: 'space-y-4' },
+                    React.createElement('div', {},
+                        React.createElement('h3', { className: 'font-semibold text-purple-700 mb-2' }, 'Categories'),
+                        React.createElement('div', { className: 'flex flex-wrap gap-2' },
+                            React.createElement('button', { onClick: () => setShopCategory(null), className: `px-4 py-2 rounded-full ${!shopCategory ? 'bg-purple-500 text-white' : 'bg-blue-100'}` }, 'All'),
+                            shopCategories.map(cat => React.createElement('button', { key: cat, onClick: () => setShopCategory(shopCategory === cat ? null : cat), className: `px-4 py-2 rounded-full ${shopCategory === cat ? 'bg-purple-500 text-white' : 'bg-blue-100'}` }, cat))
+                        )
+                    ),
+                    React.createElement('div', {},
+                        React.createElement('h3', { className: 'font-semibold text-purple-700 mb-2' }, 'Stores'),
+                        React.createElement('div', { className: 'flex flex-wrap gap-2' },
+                            React.createElement('button', { onClick: () => setShopStore(null), className: `px-4 py-2 rounded-full ${!shopStore ? 'bg-purple-500 text-white' : 'bg-blue-100'}` }, 'All'),
+                            shopStores.map(store => React.createElement('button', { key: store, onClick: () => setShopStore(shopStore === store ? null : store), className: `px-4 py-2 rounded-full ${shopStore === store ? 'bg-purple-500 text-white' : 'bg-blue-100'}` }, store))
+                        )
+                    )
+                ),
+                React.createElement('div', { className: 'space-y-3' },
+                    filteredShopping.map(item => React.createElement('div', {
+                        key: item.id,
+                        className: `bg-white rounded-lg p-4 border ${item.checked ? 'border-green-200 bg-green-50' : 'border-purple-100'}`
+                    },
+                        React.createElement('div', { className: 'flex items-center gap-3' },
+                            React.createElement('input', { type: 'checkbox', checked: item.checked, onChange: () => setShopping(shopping.map(i => i.id === item.id ? { ...i, checked: !i.checked } : i)), className: 'w-5 h-5' }),
+                            React.createElement('div', { className: 'flex-1' },
+                                React.createElement('p', { className: `font-semibold ${item.checked ? 'line-through text-gray-400' : 'text-gray-800'}` }, item.item),
+                                React.createElement('p', { className: 'text-sm text-gray-600' }, `${item.category} • ${item.store}`)
+                            ),
+                            React.createElement('span', { className: 'bg-pink-200 text-purple-800 px-3 py-1 rounded-full font-semibold text-sm' }, item.qty)
+                        )
+                    ))
+                )
+            ),
+
+            // CHORES
+            activeTab === 'chores' && React.createElement('div', { className: 'space-y-6' },
+                React.createElement('div', { className: 'flex justify-between items-center' },
+                    React.createElement('h2', { className: 'text-2xl font-bold text-purple-800' }, 'Chores')
+                ),
+                React.createElement('div', { className: 'flex gap-2 flex-wrap' },
+                    React.createElement('button', { onClick: () => setChoreFilter(null), className: `px-4 py-2 rounded-full ${!choreFilter ? 'bg-purple-500 text-white' : 'bg-blue-100'}` }, 'All'),
+                    families.map(f => React.createElement('button', { key: f, onClick: () => setChoreFilter(choreFilter === f ? null : f), className: `px-4 py-2 rounded-full ${choreFilter === f ? 'bg-purple-500 text-white' : 'bg-blue-100'}` }, f))
+                ),
+                React.createElement('div', { className: 'border-b border-purple-200 mb-4' },
+                    React.createElement('div', { className: 'flex gap-4' },
+                        React.createElement('button', { onClick: () => setChoreView('list'), className: `pb-2 px-4 font-semibold ${choreView === 'list' ? 'border-b-2 border-purple-500 text-purple-700' : 'text-gray-600'}` }, '📋 List'),
+                        React.createElement('button', { onClick: () => setChoreView('calendar'), className: `pb-2 px-4 font-semibold ${choreView === 'calendar' ? 'border-b-2 border-purple-500 text-purple-700' : 'text-gray-600'}` }, '📅 Calendar')
+                    )
+                ),
+                choreView === 'list' ? React.createElement('div', { className: 'space-y-3' },
+                    filteredChores.map(chore => React.createElement('div', {
+                        key: chore.id,
+                        className: `rounded-lg p-4 border shadow-sm ${chore.done ? 'bg-green-50 border-green-200' : 'bg-white border-purple-100'}`
+                    },
+                        React.createElement('div', { className: 'flex items-center gap-4' },
+                            React.createElement('input', { type: 'checkbox', checked: chore.done, onChange: () => setChores(chores.map(c => c.id === chore.id ? { ...c, done: !c.done } : c)), className: 'w-5 h-5' }),
+                            React.createElement('div', { className: 'flex-1' },
+                                React.createElement('h4', { className: `font-semibold ${chore.done ? 'line-through text-gray-400' : 'text-gray-800'}` }, chore.task),
+                                React.createElement('p', { className: 'text-sm text-gray-600' }, `👤 ${chore.who} • 📅 ${chore.date}`)
+                            ),
+                            React.createElement('div', { className: `px-3 py-1 rounded-full text-sm font-medium ${chore.done ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'}` }, chore.done ? 'Done' : 'Pending')
+                        )
+                    ))
+                ) : React.createElement('div', { className: 'space-y-4' },
+                    React.createElement('div', { className: 'flex gap-2 justify-between items-center' },
+                        React.createElement('button', { onClick: () => setChoresWeekStart(new Date(choresWeekStart.getTime() - 7 * 24 * 60 * 60 * 1000)), className: 'p-2 bg-pink-200 hover:bg-pink-300 rounded' }, '◀'),
+                        React.createElement('span', { className: 'font-semibold text-purple-700' }, `${weekStart.toLocaleDateString()} - ${weekDays[6].toLocaleDateString()}`),
+                        React.createElement('button', { onClick: () => setChoresWeekStart(new Date(choresWeekStart.getTime() + 7 * 24 * 60 * 60 * 1000)), className: 'p-2 bg-pink-200 hover:bg-pink-300 rounded' }, '▶')
+                    ),
+                    React.createElement('div', { className: 'bg-white rounded-lg border border-purple-100 overflow-x-auto' },
+                        React.createElement('table', { style: { width: '100%', borderCollapse: 'collapse' } },
+                            React.createElement('thead', {},
+                                React.createElement('tr', { style: { background: 'linear-gradient(90deg, #d8b4fe 0%, #fbcfe8 100%)' } },
+                                    React.createElement('th', { style: { padding: '12px', textAlign: 'left', fontWeight: '600', color: '#3e1c59' } }, 'Task'),
+                                    weekDays.map((day, idx) => React.createElement('th', { key: idx, style: { padding: '12px', textAlign: 'center', fontWeight: '600', color: '#3e1c59' } },
+                                        React.createElement('div', { style: { fontSize: '12px' } }, ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][idx]),
+                                        React.createElement('div', { style: { fontSize: '12px' } }, day.getDate())
+                                    ))
+                                )
+                            ),
+                            React.createElement('tbody', {},
+                                filteredChores.map((chore, idx) => {
+                                    const choreDate = new Date(chore.date);
+                                    return React.createElement('tr', { key: chore.id, style: { background: idx % 2 === 0 ? '#f0f9ff' : 'white' } },
+                                        React.createElement('td', { style: { padding: '12px', fontWeight: '600', cursor: 'pointer', color: '#3e1c59' } }, chore.task),
+                                        weekDays.map((day, dayIdx) => {
+                                            const isChoreDay = choreDate.toDateString() === day.toDateString();
+                                            return React.createElement('td', { key: dayIdx, style: { padding: '12px', textAlign: 'center', borderLeft: '1px solid #e5e7eb', background: isChoreDay ? '#fbcfe8' : 'inherit' } },
+                                                isChoreDay && React.createElement('input', { type: 'checkbox', checked: chore.done, onChange: () => setChores(chores.map(c => c.id === chore.id ? { ...c, done: !c.done } : c)), style: { width: '16px', height: '16px', cursor: 'pointer' } })
+                                            );
+                                        })
+                                    );
+                                })
+                            )
+                        )
+                    )
+                )
+            ),
+
+            // MEALS
+            activeTab === 'meals' && React.createElement('div', { className: 'space-y-6' },
+                React.createElement('h2', { className: 'text-2xl font-bold text-purple-800' }, 'Meal Planner'),
+                React.createElement('div', { className: 'bg-white rounded-2xl shadow-sm border border-pink-100 overflow-x-auto' },
+                    React.createElement('table', { style: { width: '100%', borderCollapse: 'collapse' } },
+                        React.createElement('thead', {},
+                            React.createElement('tr', { style: { background: 'linear-gradient(90deg, #d8b4fe 0%, #fbcfe8 100%)' } },
+                                React.createElement('th', { style: { padding: '16px', textAlign: 'left', fontWeight: '600', color: '#3e1c59' } }, 'Meal'),
+                                ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, idx) => {
+                                    const testDate = new Date(2026, 2, 10 + idx);
+                                    return React.createElement('th', { key: idx, style: { padding: '16px', textAlign: 'center', fontWeight: '600', color: '#3e1c59' } },
+                                        React.createElement('div', { style: { fontSize: '12px' } }, day),
+                                        React.createElement('div', { style: { fontSize: '12px', color: '#6b4e84' } }, testDate.getDate())
+                                    );
+                                })
+                            )
+                        ),
+                        React.createElement('tbody', {},
+                            ['Breakfast', 'Lunch', 'Dinner'].map((mealType, idx) => React.createElement('tr', { key: mealType, style: { background: idx % 2 === 0 ? '#f0f9ff' : 'white' } },
+                                React.createElement('td', { style: { padding: '16px', fontWeight: '600', color: '#6b4e84' } }, mealType),
+                                ['2026-03-10', '2026-03-11', '2026-03-12', '2026-03-13', '2026-03-14', '2026-03-15', '2026-03-16'].map((dateStr, dayIdx) => {
+                                    const mealText = meals[dateStr] ? meals[dateStr][mealType.toLowerCase()] : '';
+                                    return React.createElement('td', {
+                                        key: dayIdx,
+                                        onClick: () => { setEditingMealDate(dateStr); setMealForm(meals[dateStr] || { breakfast: '', lunch: '', dinner: '' }); setMealModal(true); },
+                                        style: { padding: '16px', textAlign: 'center', borderLeft: '1px solid #e5e7eb', cursor: 'pointer', color: '#666', fontWeight: '500' }
+                                    }, mealText || '-');
+                                })
+                            ))
+                        )
+                    )
+                ),
+                mealModal && React.createElement('div', { style: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 } },
+                    React.createElement('div', { style: { background: 'white', padding: '24px', borderRadius: '12px', maxWidth: '500px', width: '90%' } },
+                        React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' } },
+                            React.createElement('h3', { style: { margin: 0, color: '#3e1c59' } }, 'Edit Meals'),
+                            React.createElement('button', { onClick: () => setMealModal(false), style: { background: 'none', border: 'none', fontSize: '24px', color: '#999', cursor: 'pointer' } }, '✕')
+                        ),
+                        React.createElement('p', { style: { fontSize: '12px', color: '#999', marginBottom: '12px' } }, `Date: ${editingMealDate}`),
+                        React.createElement('div', { style: { marginBottom: '12px' } },
+                            React.createElement('label', { style: { display: 'block', fontWeight: '600', marginBottom: '4px', fontSize: '12px' } }, 'Breakfast'),
+                            React.createElement('input', { type: 'text', value: mealForm.breakfast, onChange: (e) => setMealForm({ ...mealForm, breakfast: e.target.value }), style: { width: '100%', padding: '8px', border: '1px solid #d4d4d8', borderRadius: '6px' } })
+                        ),
+                        React.createElement('div', { style: { marginBottom: '12px' } },
+                            React.createElement('label', { style: { display: 'block', fontWeight: '600', marginBottom: '4px', fontSize: '12px' } }, 'Lunch'),
+                            React.createElement('input', { type: 'text', value: mealForm.lunch, onChange: (e) => setMealForm({ ...mealForm, lunch: e.target.value }), style: { width: '100%', padding: '8px', border: '1px solid #d4d4d8', borderRadius: '6px' } })
+                        ),
+                        React.createElement('div', { style: { marginBottom: '12px' } },
+                            React.createElement('label', { style: { display: 'block', fontWeight: '600', marginBottom: '4px', fontSize: '12px' } }, 'Dinner'),
+                            React.createElement('input', { type: 'text', value: mealForm.dinner, onChange: (e) => setMealForm({ ...mealForm, dinner: e.target.value }), style: { width: '100%', padding: '8px', border: '1px solid #d4d4d8', borderRadius: '6px' } })
+                        ),
+                        React.createElement('div', { style: { display: 'flex', gap: '8px' } },
+                            React.createElement('button', { onClick: () => { setMeals({ ...meals, [editingMealDate]: mealForm }); setMealModal(false); }, style: { flex: 1, padding: '8px', background: '#ec4899', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' } }, 'Save'),
+                            React.createElement('button', { onClick: () => setMealModal(false), style: { flex: 1, padding: '8px', background: '#d1d5db', color: '#333', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' } }, 'Cancel')
+                        )
+                    )
+                )
+            ),
+
+            // RECIPES
+            activeTab === 'recipes' && React.createElement('div', { className: 'space-y-6' },
+                React.createElement('h2', { className: 'text-2xl font-bold text-purple-800' }, 'Recipes'),
+                React.createElement('div', { className: 'bg-white rounded-2xl shadow-lg border border-pink-100 overflow-hidden' },
+                    React.createElement('div', { className: 'p-8' },
+                        React.createElement('div', { style: { fontSize: '80px', textAlign: 'center', marginBottom: '16px' } }, recipes[recipePage].image),
+                        React.createElement('h3', { className: 'text-3xl font-bold text-purple-800 text-center mb-4' }, recipes[recipePage].name),
+                        React.createElement('div', { style: { textAlign: 'center', color: '#666', marginBottom: '16px' } },
+                            React.createElement('p', {}, `⏱️ Prep: ${recipes[recipePage].prepTime} | 🔥 Cook: ${recipes[recipePage].cookTime}`)
+                        )
+                    ),
+                    React.createElement('div', { style: { background: '#f3e8ff', borderTop: '1px solid #fbcfe8', padding: '16px' } },
+                        React.createElement('h4', { style: { margin: '0 0 12px 0', color: '#3e1c59', fontWeight: '600' } }, '📋 Ingredients'),
+                        React.createElement('ul', { style: { margin: 0, paddingLeft: '20px', listStyle: 'none', color: '#666' } },
+                            recipes[recipePage].ingredients.map((ing, i) => React.createElement('li', { key: i, style: { marginBottom: '8px' } }, ing))
+                        )
+                    ),
+                    React.createElement('div', { style: { background: 'white', borderTop: '1px solid #fbcfe8', padding: '16px' } },
+                        React.createElement('h4', { style: { margin: '0 0 12px 0', color: '#3e1c59', fontWeight: '600' } }, '👨‍🍳 Directions'),
+                        React.createElement('ol', { style: { margin: 0, paddingLeft: '20px', color: '#666' } },
+                            recipes[recipePage].directions.map((dir, i) => React.createElement('li', { key: i, style: { marginBottom: '8px' } }, dir))
+                        )
+                    )
+                ),
+                React.createElement('div', { className: 'flex justify-center gap-4 mt-4' },
+                    React.createElement('button', { onClick: () => setRecipePage(Math.max(0, recipePage - 1)), disabled: recipePage === 0, style: { padding: '8px 16px', background: recipePage === 0 ? '#d1d5db' : '#fbcfe8', color: '#333', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: recipePage === 0 ? 'default' : 'pointer' } }, '◀'),
+                    React.createElement('span', { style: { padding: '8px 16px', color: '#666', fontWeight: '600' } }, `${recipePage + 1} / ${recipes.length}`),
+                    React.createElement('button', { onClick: () => setRecipePage(Math.min(recipes.length - 1, recipePage + 1)), disabled: recipePage === recipes.length - 1, style: { padding: '8px 16px', background: recipePage === recipes.length - 1 ? '#d1d5db' : '#fbcfe8', color: '#333', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: recipePage === recipes.length - 1 ? 'default' : 'pointer' } }, '▶')
+                )
+            ),
+
+            // PANTRY
+            activeTab === 'pantry' && React.createElement('div', { className: 'space-y-6' },
+                React.createElement('h2', { className: 'text-2xl font-bold text-purple-800' }, 'Pantry'),
+                React.createElement('input', { type: 'text', placeholder: 'Search pantry...', value: pantrySearch, onChange: (e) => setPantrySearch(e.target.value), style: { width: '100%', padding: '8px 12px', border: '1px solid #d4d4d8', borderRadius: '6px', marginBottom: '12px' } }),
+                React.createElement('div', { className: 'flex flex-wrap gap-2 mb-4' },
+                    React.createElement('button', { onClick: () => setPantryCategory(null), style: { padding: '8px 16px', background: !pantryCategory ? '#9333ea' : '#dbeafe', color: !pantryCategory ? 'white' : '#3e1c59', border: 'none', borderRadius: '20px', fontWeight: '600', cursor: 'pointer' } }, 'All'),
+                    pantryCategories.map(cat => React.createElement('button', { key: cat, onClick: () => setPantryCategory(pantryCategory === cat ? null : cat), style: { padding: '8px 16px', background: pantryCategory === cat ? '#9333ea' : '#dbeafe', color: pantryCategory === cat ? 'white' : '#3e1c59', border: 'none', borderRadius: '20px', fontWeight: '600', cursor: 'pointer' } }, cat))
+                ),
+                React.createElement('div', { className: 'space-y-3' },
+                    filteredPantry.map(item => React.createElement('div', {
+                        key: item.id,
+                        className: 'bg-white rounded-lg p-4 border border-purple-100'
+                    },
+                        React.createElement('div', { className: 'flex justify-between items-start mb-3' },
+                            React.createElement('div', {},
+                                React.createElement('h4', { className: 'font-semibold text-gray-800' }, item.name),
+                                React.createElement('p', { className: 'text-sm text-gray-600' }, `📍 ${item.location}`)
+                            ),
+                            React.createElement('span', { className: 'bg-pink-200 text-purple-800 px-3 py-1 rounded-full font-semibold text-sm' }, `${item.qty} ${item.unit}`)
+                        ),
+                        React.createElement('button', { onClick: () => { setConsumeItem(item.id); setConsumeQty(''); }, className: 'w-full px-4 py-2 bg-green-300 hover:bg-green-400 text-green-800 rounded text-sm font-semibold' }, '✓ Consume')
+                    ))
+                ),
+                consumeItem && React.createElement('div', { style: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 } },
+                    React.createElement('div', { style: { background: 'white', padding: '24px', borderRadius: '12px', maxWidth: '400px', width: '90%' } },
+                        React.createElement('h3', { style: { margin: '0 0 16px 0', color: '#3e1c59' } }, 'Consume Item'),
+                        React.createElement('input', { type: 'number', value: consumeQty, onChange: (e) => setConsumeQty(e.target.value), step: '0.1', style: { width: '100%', padding: '8px', border: '1px solid #d4d4d8', borderRadius: '6px', marginBottom: '12px' }, placeholder: 'Amount', autoFocus: true }),
+                        React.createElement('div', { style: { display: 'flex', gap: '8px' } },
+                            React.createElement('button', { onClick: () => { const p = pantry.find(i => i.id === consumeItem); if (p && consumeQty) { setPantry(pantry.map(i => i.id === consumeItem ? { ...i, qty: Math.max(0, i.qty - parseFloat(consumeQty)) } : i)); setConsumeItem(null); setConsumeQty(''); } }, style: { flex: 1, padding: '8px', background: '#86efac', color: '#15803d', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' } }, 'Consume'),
+                            React.createElement('button', { onClick: () => { setConsumeItem(null); setConsumeQty(''); }, style: { flex: 1, padding: '8px', background: '#d1d5db', color: '#333', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' } }, 'Cancel')
+                        )
+                    )
+                )
+            ),
+
+            // GAMES
+            activeTab === 'games' && React.createElement('div', { className: 'space-y-6' },
+                React.createElement('h2', { className: 'text-2xl font-bold text-purple-800' }, 'Games'),
+                React.createElement('div', { className: 'flex flex-wrap gap-2 mb-4' },
+                    React.createElement('button', { onClick: () => setGameConsole(null), style: { padding: '8px 16px', background: !gameConsole ? '#9333ea' : '#dbeafe', color: !gameConsole ? 'white' : '#3e1c59', border: 'none', borderRadius: '20px', fontWeight: '600', cursor: 'pointer' } }, 'All Consoles'),
+                    consoles.map(c => React.createElement('button', { key: c, onClick: () => setGameConsole(gameConsole === c ? null : c), style: { padding: '8px 16px', background: gameConsole === c ? '#9333ea' : '#dbeafe', color: gameConsole === c ? 'white' : '#3e1c59', border: 'none', borderRadius: '20px', fontWeight: '600', cursor: 'pointer' } }, c))
+                ),
+                React.createElement('div', { className: 'space-y-3' },
+                    filteredGames.map(game => React.createElement('div', {
+                        key: game.id,
+                        className: 'bg-white rounded-lg p-4 border border-purple-100'
+                    },
+                        React.createElement('h4', { className: 'font-semibold text-gray-800 mb-2' }, game.title),
+                        React.createElement('div', { className: 'flex gap-3' },
+                            React.createElement('span', { style: { fontSize: '12px', background: game.type === 'digital' ? '#bfdbfe' : '#fed7aa', color: game.type === 'digital' ? '#1e3a8a' : '#92400e', padding: '4px 12px', borderRadius: '4px', fontWeight: '600' } }, game.type === 'digital' ? '💾 Digital' : '💿 Physical'),
+                            React.createElement('span', { style: { fontSize: '12px', background: '#f3e8ff', color: '#3e1c59', padding: '4px 12px', borderRadius: '4px', fontWeight: '600' } }, game.type === 'digital' ? `📱 ${game.account}` : `📍 ${game.location}`)
+                        )
+                    ))
+                )
+            ),
+
+            // VACATIONS
+            activeTab === 'vacation' && React.createElement('div', { className: 'space-y-6' },
+                React.createElement('h2', { className: 'text-2xl font-bold text-purple-800' }, 'Vacations'),
+                React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-4 mb-4' },
+                    vacations.map(v => React.createElement('div', {
+                        key: v.id,
+                        onClick: () => setSelectedVac(selectedVac === v.id ? null : v.id),
+                        style: { padding: '16px', background: 'white', border: '1px solid #d4d4d8', borderRadius: '12px', cursor: 'pointer' },
+                        onMouseOver: (e) => e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)',
+                        onMouseOut: (e) => e.currentTarget.style.boxShadow = 'none'
+                    },
+                        React.createElement('h3', { style: { margin: '0 0 8px 0', fontWeight: '600', color: '#3e1c59' } }, v.name),
+                        React.createElement('p', { style: { margin: '0 0 8px 0', fontSize: '12px', color: '#666' } }, v.dest),
+                        React.createElement('p', { style: { margin: 0, fontSize: '12px', color: '#999' } }, `${v.startDate} to ${v.endDate}`)
+                    ))
+                ),
+                selectedVac && React.createElement('div', { style: { background: 'linear-gradient(135deg, #fed7aa 0%, #fbcfe8 100%)', borderRadius: '12px', padding: '20px', border: '1px solid #fbcfe8' } },
+                    (() => {
+                        const v = vacations.find(v => v.id === selectedVac);
+                        return React.createElement(React.Fragment, {},
+                            React.createElement('h3', { style: { margin: '0 0 16px 0', fontSize: '24px', fontWeight: '600', color: '#3e1c59' } }, v.name),
+                            React.createElement('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' } },
+                                React.createElement('div', {},
+                                    React.createElement('p', { style: { fontSize: '12px', color: '#999', margin: 0 } }, 'Dates'),
+                                    React.createElement('p', { style: { fontWeight: '600', color: '#333', margin: '4px 0 0 0' } }, `${v.startDate} to ${v.endDate}`)
+                                ),
+                                React.createElement('div', {},
+                                    React.createElement('p', { style: { fontSize: '12px', color: '#999', margin: 0 } }, 'Status'),
+                                    React.createElement('p', { style: { fontWeight: '600', color: '#333', margin: '4px 0 0 0', textTransform: 'capitalize' } }, v.status)
+                                )
+                            ),
+                            React.createElement('div', { style: { marginBottom: '12px', background: 'white', padding: '12px', borderRadius: '8px' } },
+                                React.createElement('p', { style: { fontSize: '12px', fontWeight: '600', color: '#3e1c59', margin: '0 0 8px 0' } }, '✈️ Flights'),
+                                React.createElement('p', { style: { margin: '0 0 4px 0', fontWeight: '600', color: '#333' } }, v.flights),
+                                React.createElement('p', { style: { margin: '0 0 4px 0', fontSize: '12px', color: '#666' } }, `${v.depAirport} → ${v.retAirport}`),
+                                React.createElement('p', { style: { margin: 0, fontSize: '12px', color: '#666' } }, `Depart: ${v.depDate} ${v.depTime} | Return: ${v.retDate} ${v.retTime}`)
+                            ),
+                            React.createElement('div', { style: { marginBottom: '12px', background: 'white', padding: '12px', borderRadius: '8px' } },
+                                React.createElement('p', { style: { fontSize: '12px', fontWeight: '600', color: '#3e1c59', margin: '0 0 8px 0' } }, '🏨 Accommodation'),
+                                React.createElement('p', { style: { margin: 0, fontWeight: '600', color: '#333' } }, v.accommodation)
+                            ),
+                            React.createElement('div', { style: { background: 'white', padding: '12px', borderRadius: '8px' } },
+                                React.createElement('p', { style: { fontSize: '12px', fontWeight: '600', color: '#3e1c59', margin: '0 0 8px 0' } }, '📋 Itinerary'),
+                                v.itinerary.map((item, idx) => React.createElement('p', { key: idx, style: { margin: '0 0 4px 0', fontSize: '12px', color: '#666' } }, `Day ${item.day}: ${item.activity}`))
+                            )
+                        );
+                    })()
+                )
+            )
+        ),
+
+        // EVENT MODAL
+        eventModal && React.createElement('div', { style: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 } },
+            React.createElement('div', { style: { background: 'white', padding: '24px', borderRadius: '12px', maxWidth: '500px', width: '90%', maxHeight: '80vh', overflowY: 'auto' } },
+                React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' } },
+                    React.createElement('h3', { style: { margin: 0, color: '#3e1c59' } }, editEvent ? 'Edit Event' : 'Add Event'),
+                    React.createElement('button', { onClick: () => setEventModal(false), style: { background: 'none', border: 'none', fontSize: '24px', color: '#999', cursor: 'pointer' } }, '✕')
+                ),
+                React.createElement('div', { style: { marginBottom: '12px' } },
+                    React.createElement('label', { style: { display: 'block', fontWeight: '600', color: '#3e1c59', marginBottom: '4px', fontSize: '12px' } }, 'Title'),
+                    React.createElement('input', { type: 'text', value: eventForm.title, onChange: (e) => setEventForm({ ...eventForm, title: e.target.value }), style: { width: '100%', padding: '8px', border: '1px solid #d4d4d8', borderRadius: '6px' }, placeholder: 'Event title', autoFocus: true })
+                ),
+                React.createElement('div', { style: { marginBottom: '12px' } },
+                    React.createElement('label', { style: { display: 'block', fontWeight: '600', color: '#3e1c59', marginBottom: '4px', fontSize: '12px' } }, 'Date'),
+                    React.createElement('input', { type: 'date', value: eventForm.date, onChange: (e) => setEventForm({ ...eventForm, date: e.target.value }), style: { width: '100%', padding: '8px', border: '1px solid #d4d4d8', borderRadius: '6px' } })
+                ),
+                React.createElement('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' } },
+                    React.createElement('div', {},
+                        React.createElement('label', { style: { display: 'block', fontWeight: '600', color: '#3e1c59', marginBottom: '4px', fontSize: '12px' } }, 'Start'),
+                        React.createElement('input', { type: 'time', value: eventForm.start, onChange: (e) => setEventForm({ ...eventForm, start: e.target.value }), style: { width: '100%', padding: '8px', border: '1px solid #d4d4d8', borderRadius: '6px' } })
+                    ),
+                    React.createElement('div', {},
+                        React.createElement('label', { style: { display: 'block', fontWeight: '600', color: '#3e1c59', marginBottom: '4px', fontSize: '12px' } }, 'End'),
+                        React.createElement('input', { type: 'time', value: eventForm.end, onChange: (e) => setEventForm({ ...eventForm, end: e.target.value }), style: { width: '100%', padding: '8px', border: '1px solid #d4d4d8', borderRadius: '6px' } })
+                    )
+                ),
+                React.createElement('div', { style: { marginBottom: '12px' } },
+                    React.createElement('label', { style: { display: 'block', fontWeight: '600', color: '#3e1c59', marginBottom: '4px', fontSize: '12px' } }, 'Venue'),
+                    React.createElement('input', { type: 'text', value: eventForm.venue, onChange: (e) => setEventForm({ ...eventForm, venue: e.target.value }), style: { width: '100%', padding: '8px', border: '1px solid #d4d4d8', borderRadius: '6px' }, placeholder: 'Event venue' })
+                ),
+                React.createElement('div', { style: { marginBottom: '12px' } },
+                    React.createElement('label', { style: { display: 'block', fontWeight: '600', color: '#3e1c59', marginBottom: '8px', fontSize: '12px' } }, 'Attendees'),
+                    React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px', background: '#dbeafe', padding: '12px', borderRadius: '6px' } },
+                        families.map(f => React.createElement('label', { key: f, style: { display: 'flex', alignItems: 'center', cursor: 'pointer', margin: 0, fontWeight: 'normal' } },
+                            React.createElement('input', { type: 'checkbox', checked: eventForm.members.includes(f), onChange: (e) => setEventForm({ ...eventForm, members: e.target.checked ? [...eventForm.members, f] : eventForm.members.filter(x => x !== f) }), style: { marginRight: '8px', cursor: 'pointer' } }),
+                            React.createElement('span', { style: { fontSize: '12px' } }, f)
+                        ))
+                    )
+                ),
+                React.createElement('div', { style: { marginBottom: '12px' } },
+                    React.createElement('label', { style: { display: 'block', fontWeight: '600', color: '#3e1c59', marginBottom: '4px', fontSize: '12px' } }, 'Details'),
+                    React.createElement('textarea', { value: eventForm.details, onChange: (e) => setEventForm({ ...eventForm, details: e.target.value }), style: { width: '100%', padding: '8px', border: '1px solid #d4d4d8', borderRadius: '6px', fontFamily: 'Arial', resize: 'vertical' }, placeholder: 'Notes...', rows: 3 })
+                ),
+                React.createElement('div', { style: { display: 'flex', gap: '8px' } },
+                    React.createElement('button', { onClick: saveEvent, style: { flex: 1, padding: '8px', background: '#ec4899', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' } }, 'Save'),
+                    editEvent && React.createElement('button', { onClick: deleteEvent, style: { flex: 1, padding: '8px', background: '#f87171', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' } }, 'Delete'),
+                    React.createElement('button', { onClick: () => setEventModal(false), style: { flex: 1, padding: '8px', background: '#d1d5db', color: '#333', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' } }, 'Cancel')
+                )
+            )
+        )
+    );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(React.createElement(App));
+    </script>
+</body>
+</html>
